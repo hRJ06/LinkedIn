@@ -1,4 +1,6 @@
 spring.application.name: API-Gateway
+jwt.secret_key: P9bRq8c3ZjTNz7XLM5vJHyWcS4dGQ5Ef
+
 server.port: 8080
 eureka:
   client:
@@ -23,9 +25,11 @@ spring:
             - Path=/api/v1/posts/**
           filters:
             - StripPrefix=2
+            - name: AuthenticationFilter
         - id: connection-service
           uri: lb://CONNECTION-SERVICE
           predicates:
             - Path=/api/v1/connections/**
           filters:
             - StripPrefix=2
+            - name: AuthenticationFilter
