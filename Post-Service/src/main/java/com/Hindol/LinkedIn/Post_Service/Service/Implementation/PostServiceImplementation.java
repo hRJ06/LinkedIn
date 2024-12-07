@@ -1,5 +1,6 @@
 package com.Hindol.LinkedIn.Post_Service.Service.Implementation;
 
+import com.Hindol.LinkedIn.Post_Service.Auth.UserContextHolder;
 import com.Hindol.LinkedIn.Post_Service.DTO.PostCreateRequestDTO;
 import com.Hindol.LinkedIn.Post_Service.DTO.PostDTO;
 import com.Hindol.LinkedIn.Post_Service.Entity.Post;
@@ -21,7 +22,8 @@ public class PostServiceImplementation implements PostService {
     private final ModelMapper modelMapper;
     private final PostRepository postRepository;
     @Override
-    public PostDTO createPost(PostCreateRequestDTO postCreateRequestDTO, Long userId) {
+    public PostDTO createPost(PostCreateRequestDTO postCreateRequestDTO) {
+        Long userId = UserContextHolder.getCurrentUserId();
         Post post = modelMapper.map(postCreateRequestDTO, Post.class);
         post.setUserId(userId);
         Post savedPost = postRepository.save(post);

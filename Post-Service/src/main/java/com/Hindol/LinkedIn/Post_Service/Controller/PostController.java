@@ -19,12 +19,12 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
     @PostMapping
-    public ResponseEntity<PostDTO> createPost(@RequestBody PostCreateRequestDTO postCreateRequestDTO, HttpServletRequest httpServletRequest) {
-        PostDTO createdPost = postService.createPost(postCreateRequestDTO, 1L);
+    public ResponseEntity<PostDTO> createPost(@RequestBody PostCreateRequestDTO postCreateRequestDTO) {
+        PostDTO createdPost = postService.createPost(postCreateRequestDTO);
         return new ResponseEntity<>(createdPost, HttpStatus.CREATED);
     }
     @GetMapping("/{postId}")
-    public ResponseEntity<PostDTO> getPost(@PathVariable Long postId, @RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<PostDTO> getPost(@PathVariable Long postId) {
         PostDTO post = postService.getPostById(postId);
         return ResponseEntity.ok(post);
     }
