@@ -1,8 +1,6 @@
 package com.Hindol.LinkedIn.Post_Service.Service.Implementation;
 
 import com.Hindol.LinkedIn.Post_Service.Auth.UserContextHolder;
-import com.Hindol.LinkedIn.Post_Service.Client.ConnectionClient;
-import com.Hindol.LinkedIn.Post_Service.DTO.PersonDTO;
 import com.Hindol.LinkedIn.Post_Service.DTO.PostCreateRequestDTO;
 import com.Hindol.LinkedIn.Post_Service.DTO.PostDTO;
 import com.Hindol.LinkedIn.Post_Service.Entity.Post;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 public class PostServiceImplementation implements PostService {
     private final ModelMapper modelMapper;
     private final PostRepository postRepository;
-    private final ConnectionClient connectionClient;
     private final KafkaTemplate<Long, PostCreatedEvent> kafkaTemplate;
     @Override
     public PostDTO createPost(PostCreateRequestDTO postCreateRequestDTO) {
@@ -45,8 +42,6 @@ public class PostServiceImplementation implements PostService {
     @Override
     public PostDTO getPostById(Long postId) {
         log.debug("Retrieving Post with ID : {}", postId);
-        List<PersonDTO> firstConnection = connectionClient.getFirstConnections();
-        /* TODO: Send notification to connection */
         Post post = postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("No Post found with ID : " + postId));
         return modelMapper.map(post, PostDTO.class);
     }
