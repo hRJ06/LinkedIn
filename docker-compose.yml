@@ -1,0 +1,149 @@
+version: "3.8"
+services:
+  kafka:
+    image: docker.io/bitnami/kafka:3.8
+    container_name: kafka
+    volumes:
+      - "kafka_data:/bitnami"
+    networks:
+      - linkedin-network
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+
+  kafbat-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafbat-ui
+    ports:
+      - "8090:8080"
+    networks:
+      - linkedin-network
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_KSQLDBSERVER: http://kqsldb0:8088
+
+  connection-db:
+    image: neo4j
+    container_name: connection-db
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - "connection-db-data:/data"
+    networks:
+      - linkedin-network
+
+  notification-db:
+    image: postgres
+    container_name: notification-db
+    environment:
+      - POSTGRES_DB=notificationDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=rootMyPG
+    networks:
+      - linkedin-network
+    volumes:
+      - "notification-db-data:/var/lib/postgresql/data"
+
+  post-db:
+    image: postgres
+    container_name: post-db
+    environment:
+      - POSTGRES_DB=postDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=rootMyPG
+    networks:
+      - linkedin-network
+    volumes:
+      - "post-db-data:/var/lib/postgresql/data"
+
+  user-db:
+    image: postgres
+    container_name: user-db
+    environment:
+      - POSTGRES_DB=userDB
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=rootMyPG
+    networks:
+      - linkedin-network
+    volumes:
+      - "user-db-data:/var/lib/postgresql/data"
+
+  discovery-server:
+    image: hrj06/linkedin/discovery-server:0.0.1
+    container_name: discovery-server
+    networks:
+      - linkedin-network
+    ports:
+      - "8761:8761"
+
+  notification-service:
+    image: hrj06/linkedin/notification-service:0.0.1
+    container_name: notification-service
+    networks:
+      - linkedin-network
+    depends_on:
+      - discovery-server
+      - notification-db
+      - kafka
+
+  connection-service:
+    image: hrj06/linkedin/connection-service:0.0.1
+    container_name: connection-service
+    networks:
+      - linkedin-network
+    depends_on:
+      - discovery-server
+      - connection-db
+      - kafka
+
+  api-gateway:
+    image: hrj06/linkedin/api-gateway:0.0.1
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - linkedin-network
+    depends_on:
+      - discovery-server
+
+  post-service:
+    image: hrj06/linkedin/post-service:0.0.1
+    container_name: post-service
+    networks:
+      - linkedin-network
+    depends_on:
+      - discovery-server
+      - post-db
+      - kafka
+
+  user-service:
+    image: hrj06/linkedin/user-service:0.0.1
+    container_name: user-service
+    networks:
+      - linkedin-network
+    depends_on:
+      - discovery-server
+      - user-db
+      - kafka
+
+networks:
+  linkedin-network:
+
+volumes:
+  kafka_data:
+  notification-db-data:
+  post-db-data:
+  user-db-data:
+  connection-db-data:
